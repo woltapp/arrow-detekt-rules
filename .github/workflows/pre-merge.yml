@@ -1,0 +1,40 @@
+name: PR Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Run tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
+  publish:
+    name: Check that the publish plugin works
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Check that the publish plugin works
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publishToMavenLocal
+  compile-test-snippets:
+    name: Compile test snippets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Compile the snippets in the tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test -Pcompile-test-snippets
