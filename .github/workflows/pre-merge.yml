@@ -28,13 +28,23 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: publishToMavenLocal
-  compile-test-snippets:
-    name: Compile test snippets
+  lint:
+    name: Check that the code is formatted
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-      - name: Compile the snippets in the tests
+      - name: Check that the code is formatted
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: ktlintCheck
+  compile-test-snippets:
+    name: Compile test snippets and run the tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Compile the snippets in the tests and run the tests
         uses: gradle/gradle-build-action@v2
         with:
           arguments: test -Pcompile-test-snippets
