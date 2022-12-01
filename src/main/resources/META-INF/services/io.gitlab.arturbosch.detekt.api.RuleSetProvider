@@ -1,1 +1,1 @@
-com.wolt.arrow.detekt.rules.MyRuleSetProvider
+com.wolt.arrow.detekt.rules.ArrowRuleSetProvider
