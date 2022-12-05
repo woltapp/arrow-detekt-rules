@@ -25,6 +25,9 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Check that the publish plugin works
+        env:
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
         uses: gradle/gradle-build-action@v2
         with:
           arguments: publishToMavenLocal

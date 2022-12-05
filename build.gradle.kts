@@ -1,10 +1,10 @@
 plugins {
     kotlin("jvm") version "1.7.20"
     `maven-publish`
+    signing
 }
 
 group = "com.wolt.arrow.detekt"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -32,16 +32,57 @@ dependencies {
     ktlint("com.pinterest:ktlint:0.47.1")
 }
 
+val mavenPublicationName = "library"
+
 publishing {
     publications {
-        create<MavenPublication>("library") {
+        create<MavenPublication>(mavenPublicationName) {
             version = project.version.toString()
             groupId = project.group.toString()
             artifactId = "rules"
             from(components["kotlin"])
             artifact(tasks.kotlinSourcesJar)
+            artifact(tasks.named("javadocJar"))
+            pom {
+                name.set("Arrow Detekt rules")
+                description.set("Detekt rules that validate usage of Arrow")
+                url.set("https://github.com/woltapp/arrow-detekt-rules")
+                licenses {
+                    license {
+                        name.set("The MIT License")
+                        url.set("https://github.com/woltapp/arrow-detekt-rules/blob/main/LICENSE")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("diastremskii")
+                        name.set("Daniil Iastremskii")
+                        email.set("daniil.iastremskii@wolt.com")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:https://github.com/woltapp/arrow-detekt-rules.git")
+                    developerConnection.set("scm:git:https://github.com/woltapp/arrow-detekt-rules.git")
+                    url.set("https://github.com/woltapp/arrow-detekt-rules")
+                }
+            }
         }
     }
+
+    repositories {
+        maven {
+            name = "sonatype"
+            credentials(PasswordCredentials::class)
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+        }
+    }
+}
+
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(publishing.publications[mavenPublicationName])
 }
 
 tasks {
