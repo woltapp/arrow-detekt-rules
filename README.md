@@ -7,7 +7,7 @@ This project contains [Detekt](https://detekt.dev) rules for the [Arrow](https:/
 1. Add this project as a Detekt plugin to `build.gradle.kts`
 ```kotlin
 dependencies {
-    detektPlugins("com.wolt.arrow.detekt.rules:*VERSION*")
+    detektPlugins("com.wolt.arrow.detekt:rules:*VERSION*")
 }
 ```
 2. Enable and configure rules in Detekt configuration, example:
