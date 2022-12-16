@@ -29,7 +29,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:5.5.4")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 
-    ktlint("com.pinterest:ktlint:0.47.1")
+    ktlint("com.pinterest:ktlint:0.48.0")
 }
 
 val mavenPublicationName = "library"
