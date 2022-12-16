@@ -11,8 +11,8 @@ class ArrowRuleSetProvider : RuleSetProvider {
         return RuleSet(
             ruleSetId,
             listOf(
-                NoEffectScopeBindableValueAsStatement(config)
-            )
+                NoEffectScopeBindableValueAsStatement(config),
+            ),
         )
     }
 }
