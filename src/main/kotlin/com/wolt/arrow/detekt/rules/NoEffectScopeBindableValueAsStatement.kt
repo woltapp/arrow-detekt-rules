@@ -28,7 +28,7 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
         Severity.Defect,
         "Having a bindable value inside effect scope used as a statement " +
             "discards it's result and usually represents an error.",
-        Debt.FIVE_MINS
+        Debt.FIVE_MINS,
     )
 
     override fun visitLambdaExpression(lambdaExpression: KtLambdaExpression) {
@@ -90,8 +90,8 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
                         issue,
                         Entity.from(expression),
                         "This expression could be bound using the effect scope, but it is left unbound. " +
-                            "The value of this expression is discarded."
-                    )
+                            "The value of this expression is discarded.",
+                    ),
                 )
             }
         }
@@ -122,7 +122,7 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
             FqName("arrow.core.continuations.Effect"),
             FqName("arrow.core.Ior"),
             FqName("arrow.core.Option"),
-            FqName("kotlin.Result")
+            FqName("kotlin.Result"),
         )
     }
 }
