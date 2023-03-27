@@ -17,6 +17,8 @@ ArrowRuleSet:
     active: true
 ```
 
+Note that by default Detekt runs without type resolution enabled (just running `detekt` will not run the rules from this repo), see [Detekt documentation on that](https://detekt.dev/docs/gettingstarted/type-resolution/).
+
 ## Contribution guidelines
 - Read [Detekt documentation](https://detekt.dev/docs/introduction/extensions/) about extending it.
 - When adding a new rule, don't forget to include it RuleSetProvider (or create one if adding a new rule set).
