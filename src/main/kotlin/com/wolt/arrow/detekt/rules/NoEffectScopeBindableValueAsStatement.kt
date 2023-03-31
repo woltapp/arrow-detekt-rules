@@ -9,8 +9,11 @@ import io.gitlab.arturbosch.detekt.api.Issue
 import io.gitlab.arturbosch.detekt.api.Rule
 import io.gitlab.arturbosch.detekt.api.Severity
 import io.gitlab.arturbosch.detekt.api.internal.RequiresTypeResolution
+import io.gitlab.arturbosch.detekt.rules.fqNameOrNull
+import org.jetbrains.kotlin.descriptors.impl.PackageFragmentDescriptorImpl
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtBlockExpression
+import org.jetbrains.kotlin.psi.KtCallableReferenceExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtLambdaExpression
 import org.jetbrains.kotlin.psi.psiUtil.getQualifiedExpressionForReceiver
@@ -19,6 +22,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.bindingContextUtil.isUsedAsStatement
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.getAbbreviatedType
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 
 @RequiresTypeResolution
@@ -27,7 +31,7 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
         javaClass.simpleName,
         Severity.Defect,
         "Having a bindable value inside effect scope used as a statement " +
-            "discards it's result and usually represents an error.",
+          "discards it's result and usually represents an error.",
         Debt.FIVE_MINS,
     )
 
@@ -45,20 +49,21 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
             ?.type
             ?: return
 
-        val isEffectScope = isEffectScope(firstArgumentType) || firstArgumentType.supertypes().any(::isEffectScope)
+        val isEffectScope = isBindableScope(firstArgumentType) || firstArgumentType.supertypes().any(::isBindableScope)
 
         if (isEffectScope) {
             EffectScopeVisitor().visitLambdaExpression(lambdaExpression)
         }
     }
 
-    private fun isEffectScope(type: KotlinType): Boolean = type
+    private fun isBindableScope(type: KotlinType): Boolean = type
         .constructor
         .declarationDescriptor
         ?.fqNameSafe
         ?.let {
             it == FqName("arrow.core.continuations.EffectScope") ||
-                it == FqName("arrow.core.continuations.EagerEffectScope")
+              it == FqName("arrow.core.continuations.EagerEffectScope") ||
+              it == FqName("arrow.core.raise.Raise")
         }
         ?: false
 
@@ -90,7 +95,7 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
                         issue,
                         Entity.from(expression),
                         "This expression could be bound using the effect scope, but it is left unbound. " +
-                            "The value of this expression is discarded.",
+                          "The value of this expression is discarded.",
                     ),
                 )
             }
@@ -105,13 +110,27 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
                 .getQualifiedExpressionForReceiver()
                 ?.selectorExpression
 
-        private fun isBindable(type: KotlinType): Boolean =
-            type
-                .constructor
-                .declarationDescriptor
-                ?.fqNameSafe
-                ?.let { it in BindableFqNames }
-                ?: false
+        private fun isBindable(type: KotlinType): Boolean {
+            val isBindableFqNames =
+                type
+                    .constructor
+                    .declarationDescriptor
+                    ?.fqNameSafe
+                    ?.let { it in BindableFqNames } ?: false
+
+            val isPackage = (type.getAbbreviatedType()
+                ?.abbreviation
+                ?.constructor
+                ?.declarationDescriptor
+                ?.containingDeclaration as? PackageFragmentDescriptorImpl
+              )?.fqName?.asString() == "arrow.core.raise"
+
+            val isRaiseEffect =
+                (type.getAbbreviatedType()?.abbreviation?.constructor?.declarationDescriptor?.name?.asString() == "EagerEffect") ||
+                  (type.getAbbreviatedType()?.abbreviation?.constructor?.declarationDescriptor?.name?.asString() == "Effect")
+
+            return isBindableFqNames || (isPackage && isRaiseEffect)
+        }
     }
 
     companion object {
