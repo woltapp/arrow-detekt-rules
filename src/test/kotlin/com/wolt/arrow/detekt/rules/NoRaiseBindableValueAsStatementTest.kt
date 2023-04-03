@@ -283,6 +283,44 @@ internal class NoRaiseBindableValueAsStatementTest(private val env: KotlinCoreEn
             val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
             findings shouldHaveSize 1
         }
+
+        @Test
+        fun `reports unbound value inside extension function with receiver extending Raise`() {
+            val code = """
+                import arrow.core.Either
+                import arrow.core.raise.Raise
+                import arrow.core.raise.either
+                
+                fun t(): Either<String, Int> = either { 1 }
+                
+                class MyChildRaise: Raise<String> {
+                    override fun raise(r: String): Nothing = TODO()
+                }
+                
+                fun MyChildRaise.test(): Int {
+                    t()
+                    return 1
+                }
+            """
+            val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+            findings shouldHaveSize 1
+        }
+
+        @Test
+        fun `reports Raise extension function with unbound value`() {
+            val code = """
+                import arrow.core.raise.Raise
+                import arrow.core.raise.either
+                import arrow.core.Either
+    
+                fun Raise<String>.test(): Int {
+                    Either.Right(1)
+                    return 1
+                }
+            """
+            val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+            findings shouldHaveSize 1
+        }
     }
 
     @Test
@@ -332,6 +370,24 @@ internal class NoRaiseBindableValueAsStatementTest(private val env: KotlinCoreEn
             fun test(): Either<Throwable, Int> = either {
                 a()
                 1
+            }
+        """
+        val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+        findings shouldHaveSize 1
+    }
+
+    @Test
+    fun `reports Raise extension function with unbound call expression`() {
+        val code = """
+            import arrow.core.Either
+            import arrow.core.raise.Raise
+            import arrow.core.raise.either
+            
+            fun a() = Either.Right(1)
+            
+            fun Raise<String>.test(): Int {
+                a()
+                return 1
             }
         """
         val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
@@ -407,6 +463,19 @@ internal class NoRaiseBindableValueAsStatementTest(private val env: KotlinCoreEn
             fun test(): Either<Throwable, Unit> = either {
                 Either.Right(1).bind()
             }
+        """
+        val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+        findings shouldHaveSize 0
+    }
+
+    @Test
+    fun `does not report Raise extension function with nothing to bind`() {
+        val code = """
+            import arrow.core.Either
+            import arrow.core.raise.Raise
+            import arrow.core.raise.either
+            
+            fun Raise<String>.test(): Int = raise("failure")
         """
         val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
         findings shouldHaveSize 0
