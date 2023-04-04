@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtBlockExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtLambdaExpression
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.getQualifiedExpressionForReceiver
 import org.jetbrains.kotlin.psi.psiUtil.getQualifiedExpressionForSelectorOrThis
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -31,6 +32,25 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
         Debt.FIVE_MINS,
     )
 
+    override fun visitNamedFunction(function: KtNamedFunction) {
+        super.visitNamedFunction(function)
+
+        if (bindingContext == BindingContext.EMPTY) {
+            return
+        }
+
+        val receiverType = bindingContext[BindingContext.FUNCTION, function]
+            ?.extensionReceiverParameter
+            ?.type
+            ?: return
+
+        val isEffectScope = isBindableScope(receiverType) || receiverType.supertypes().any(::isBindableScope)
+
+        if (isEffectScope) {
+            EffectScopeVisitor().visitNamedFunction(function)
+        }
+    }
+
     override fun visitLambdaExpression(lambdaExpression: KtLambdaExpression) {
         super.visitLambdaExpression(lambdaExpression)
 
@@ -45,20 +65,21 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
             ?.type
             ?: return
 
-        val isEffectScope = isEffectScope(firstArgumentType) || firstArgumentType.supertypes().any(::isEffectScope)
+        val isEffectScope = isBindableScope(firstArgumentType) || firstArgumentType.supertypes().any(::isBindableScope)
 
         if (isEffectScope) {
             EffectScopeVisitor().visitLambdaExpression(lambdaExpression)
         }
     }
 
-    private fun isEffectScope(type: KotlinType): Boolean = type
+    private fun isBindableScope(type: KotlinType): Boolean = type
         .constructor
         .declarationDescriptor
         ?.fqNameSafe
         ?.let {
             it == FqName("arrow.core.continuations.EffectScope") ||
-                it == FqName("arrow.core.continuations.EagerEffectScope")
+                it == FqName("arrow.core.continuations.EagerEffectScope") ||
+                it == FqName("arrow.core.raise.Raise")
         }
         ?: false
 
@@ -105,13 +126,25 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
                 .getQualifiedExpressionForReceiver()
                 ?.selectorExpression
 
-        private fun isBindable(type: KotlinType): Boolean =
-            type
-                .constructor
-                .declarationDescriptor
-                ?.fqNameSafe
-                ?.let { it in BindableFqNames }
-                ?: false
+        private fun isBindable(type: KotlinType): Boolean {
+            val isBindableFqNames =
+                type
+                    .constructor
+                    .declarationDescriptor
+                    ?.fqNameSafe
+                    ?.let { it in BindableFqNames } ?: false
+
+            val isRaiseExtensionFunction = type.annotations.hasAnnotation(FqName("kotlin.ExtensionFunctionType")) &&
+                type
+                    .arguments
+                    .firstOrNull()
+                    ?.type
+                    ?.constructor
+                    ?.declarationDescriptor
+                    ?.fqNameSafe == FqName("arrow.core.raise.Raise")
+
+            return isBindableFqNames || isRaiseExtensionFunction
+        }
     }
 
     companion object {
