@@ -25,7 +25,7 @@ dependencies {
     testImplementation(platform("io.arrow-kt:arrow-stack:1.2.0-RC"))
     testImplementation("io.arrow-kt:arrow-core")
 
-    testImplementation("io.gitlab.arturbosch.detekt:detekt-test:1.22.0")
+    testImplementation("io.gitlab.arturbosch.detekt:detekt-test:1.23.0")
     testImplementation("io.kotest:kotest-assertions-core:5.6.2")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
 
