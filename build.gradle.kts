@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.21"
     `maven-publish`
     signing
 }
@@ -20,7 +20,7 @@ java {
 val ktlint: Configuration by configurations.creating
 
 dependencies {
-    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:1.22.0")
+    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:1.23.0")
 
     testImplementation(platform("io.arrow-kt:arrow-stack:1.2.0"))
     testImplementation("io.arrow-kt:arrow-core")
