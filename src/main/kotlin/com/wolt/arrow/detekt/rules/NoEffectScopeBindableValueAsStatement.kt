@@ -28,7 +28,7 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
         javaClass.simpleName,
         Severity.Defect,
         "Having a bindable value inside effect scope used as a statement " +
-            "discards it's result and usually represents an error.",
+            "discards its result and usually represents an error.",
         Debt.FIVE_MINS,
     )
 
