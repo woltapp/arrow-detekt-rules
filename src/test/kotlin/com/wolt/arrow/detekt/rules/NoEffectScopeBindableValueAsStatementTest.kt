@@ -151,7 +151,7 @@ internal class NoEffectScopeBindableValueAsStatementTest(private val env: Kotlin
     @DisplayName("effect scope variations")
     inner class EffectScopeVariations {
         @Test
-        fun `reports unbound value inside effect {} scope`() {
+        fun `reports unbound value inside legacy effect {} scope`() {
             val code = """
                 import arrow.core.Either
                 import arrow.core.continuations.Effect
@@ -167,11 +167,43 @@ internal class NoEffectScopeBindableValueAsStatementTest(private val env: Kotlin
         }
 
         @Test
-        fun `reports unbound value inside eagerEffect {} scope`() {
+        fun `reports unbound value inside effect {} scope`() {
+            val code = """
+                import arrow.core.Either
+                import arrow.core.raise.Effect
+                import arrow.core.raise.effect
+                
+                fun test(): Effect<Throwable, Int> = effect {
+                    Either.Right(1)
+                    1
+                }
+            """
+            val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+            findings shouldHaveSize 1
+        }
+
+        @Test
+        fun `reports unbound value inside legacy eagerEffect {} scope`() {
             val code = """
                 import arrow.core.Either
                 import arrow.core.continuations.EagerEffect
                 import arrow.core.continuations.eagerEffect
+                
+                fun test(): EagerEffect<Throwable, Int> = eagerEffect {
+                    Either.Right(1)
+                    1
+                }
+            """
+            val findings = NoEffectScopeBindableValueAsStatement(Config.empty).lintWithContext(env, code)
+            findings shouldHaveSize 1
+        }
+
+        @Test
+        fun `reports unbound value inside eagerEffect {} scope`() {
+            val code = """
+                import arrow.core.Either
+                import arrow.core.raise.EagerEffect
+                import arrow.core.raise.eagerEffect
                 
                 fun test(): EagerEffect<Throwable, Int> = eagerEffect {
                     Either.Right(1)
