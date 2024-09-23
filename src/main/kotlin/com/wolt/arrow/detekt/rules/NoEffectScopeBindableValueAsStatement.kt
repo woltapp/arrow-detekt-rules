@@ -153,6 +153,8 @@ class NoEffectScopeBindableValueAsStatement(config: Config) : Rule(config) {
             FqName("arrow.core.Validated"),
             FqName("arrow.core.continuations.EagerEffect"),
             FqName("arrow.core.continuations.Effect"),
+            FqName("arrow.core.raise.EagerEffect"),
+            FqName("arrow.core.raise.Effect"),
             FqName("arrow.core.Ior"),
             FqName("arrow.core.Option"),
             FqName("kotlin.Result"),
