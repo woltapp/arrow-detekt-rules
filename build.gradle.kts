@@ -20,7 +20,7 @@ java {
 val ktlint: Configuration by configurations.creating
 
 dependencies {
-    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:1.23.4")
+    compileOnly("io.gitlab.arturbosch.detekt:detekt-api:1.23.7")
 
     testImplementation(platform("io.arrow-kt:arrow-stack:1.2.1"))
     testImplementation("io.arrow-kt:arrow-core")
